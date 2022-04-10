@@ -1,3 +1,4 @@
+import numpy as np
 import pygame
 from constants import *
 from angular_diameter_distance import einstein_radius, magnification
@@ -16,14 +17,15 @@ class LensModel:
         self.einstein_radius = HEIGHT / 4
         self.center = np.array([WIDTH/2, HEIGHT/2])
         self.diff = np.array([dx, dy])
+        self.pos = self.center
 
     def update(self, pos):
-        pos = np.array(pos) + self.diff
+        self.pos = np.array(pos)
         if (pos == self.center).all():
             pygame.draw.circle(self.screen, [255, 255, 255], self.center, self.einstein_radius, 2)
             return
 
-        b = np.sqrt((pos[0] - self.center[0])**2 + (pos[1] - self.center[1])**2)
+        b = np.sqrt((self.pos[0] - self.center[0])**2 + (self.pos[1] - self.center[1])**2)
         angle_1 = (b + np.sqrt(b ** 2 + 4 * self.einstein_radius ** 2)) / 2
         angle_2 = abs((b - np.sqrt(b ** 2 + 4 * self.einstein_radius ** 2)) / 2)
         m1, m2 = magnification(b, self.einstein_radius)
@@ -41,10 +43,10 @@ class LensModel:
                 image1_color[i] = 255
             if image2_color[i] > 255:
                 image2_color[i] = 255
-        poses = np.array([(pos[0] - self.center[0]), (pos[1] - self.center[1])])
+        poses = np.array([(self.pos[0] - self.center[0]), (self.pos[1] - self.center[1])])
         pos1 = poses * angle_1 / b + self.center
         pos2 = poses * (-1 * angle_2 / b) + self.center
-        pygame.draw.circle(self.screen, source_color, pos, 2)
+        pygame.draw.circle(self.screen, source_color, self.pos, 2)
         # pygame.draw.circle(self.screen, image1_color_, self.center, angle_1, 1)
         # pygame.draw.circle(self.screen, image2_color_, self.center, angle_2, 1)
         pygame.draw.circle(self.screen, image1_color, pos1, 2)
@@ -69,16 +71,32 @@ finished = False
 
 while not finished:
     clock.tick(FPS)
+    diff = np.array([0, 0])
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             finished = True
 
     pressed = pygame.mouse.get_pressed()
+    key = pygame.key.get_pressed()
     if pressed[0]:
         screen.fill([0, 0, 0])
         sources[0].lens_update()
         for source in sources:
-            source.update(pygame.mouse.get_pos())
+            source.update(pygame.mouse.get_pos() + source.diff)
+    if any(key):
+        if key[pygame.K_DOWN]:
+            diff += np.array([0, 1])
+        if key[pygame.K_UP]:
+            diff += np.array([0, -1])
+        if key[pygame.K_RIGHT]:
+            diff += np.array([1, 0])
+        if key[pygame.K_LEFT]:
+            diff += np.array([-1, 0])
+        screen.fill([0, 0, 0])
+        sources[0].lens_update()
+        for source in sources:
+            source.update(source.pos + diff)
+
     pygame.display.update()
 
 pygame.quit()
