@@ -35,10 +35,12 @@ class LensModel:
         image2_color *= m2
         image2_color_ = source_color.copy()
         image2_color_ *= 0.2
-        if (image1_color > [255, 255, 255]).any():
-            image1_color = [255, 255, 255]
-        if (image2_color > [255, 255, 255]).any():
-            image2_color = [255, 255, 255]
+
+        for i in range(3):
+            if image1_color[i] > 255:
+                image1_color[i] = 255
+            if image2_color[i] > 255:
+                image2_color[i] = 255
         poses = np.array([(pos[0] - self.center[0]), (pos[1] - self.center[1])])
         pos1 = poses * angle_1 / b + self.center
         pos2 = poses * (-1 * angle_2 / b) + self.center
@@ -55,9 +57,9 @@ class LensModel:
 
 sources = []
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-for i in range(40):
-    for j in range(40):
-        sources.append(LensModel(screen=screen, dx=10*(np.sin(j) + np.cos(i)), dy=10*(np.sin(i) + np.cos(j))))
+for i in range(30):
+    for j in range(30):
+        sources.append(LensModel(screen=screen, dx=5*(np.sin(j) + np.cos(i)), dy=5*(np.sin(i) + np.cos(j))))
 
 pygame.init()
 
