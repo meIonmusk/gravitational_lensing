@@ -1,6 +1,6 @@
 import pygame
 from constants import *
-from angular_diameter_distance import einstein_radius
+from angular_diameter_distance import einstein_radius, magnification
 
 
 class LensModel:
@@ -17,33 +17,35 @@ class LensModel:
         self.center = np.array([WIDTH/2, HEIGHT/2])
         
     def update(self, pos):
-        # pos = np.array([pos])
+        self.screen.fill([0, 0, 0])
+        self.lens_update()
         if (pos == self.center).all():
-            pygame.draw.circle(self.screen, source_color_, self.center, self.einstein_radius, 2)
+            pygame.draw.circle(self.screen, [255, 255, 255], self.center, self.einstein_radius, 2)
+            pygame.draw.circle(self.screen, [200, 200, 200], self.center, self.einstein_radius*1.01, 2)
+            pygame.draw.circle(self.screen, [100, 100, 100], self.center, self.einstein_radius*1.02, 2)
+            pygame.draw.circle(self.screen, [200, 200, 200], self.center, self.einstein_radius*0.99, 2)
+            pygame.draw.circle(self.screen, [100, 100, 100], self.center, self.einstein_radius*0.98, 2)
             return
 
         b = np.sqrt((pos[0] - self.center[0])**2 + (pos[1] - self.center[1])**2)
         angle_1 = (b + np.sqrt(b ** 2 + 4 * self.einstein_radius ** 2)) / 2
         angle_2 = abs((b - np.sqrt(b ** 2 + 4 * self.einstein_radius ** 2)) / 2)
-        m1 = (1 + (b**2 + 2 * self.einstein_radius**2) / np.sqrt(b**2 + 4 * self.einstein_radius**2)
-              / self.scale)/2 * 255
-        m2 = (1 - (b**2 + 2 * self.einstein_radius**2) / np.sqrt(b**2 + 4 * self.einstein_radius**2)
-              / self.scale)/2 * 255
-        # m1 = random.randint(0, 255)
-        # m2 = random.randint(0, 255)
+        m1, m2 = magnification(b, self.einstein_radius)
         image1_color = source_color.copy()
-        image1_color.append(m1)
+        image1_color *= m1
         image1_color_ = source_color.copy()
-        image1_color_.append(50)
+        image1_color_ *= 0.2
         image2_color = source_color.copy()
-        image2_color.append(m2)
+        image2_color *= m2
         image2_color_ = source_color.copy()
-        image2_color_.append(50)
+        image2_color_ *= 0.2
+        if (image1_color > [255, 255, 255]).any():
+            image1_color = [255, 255, 255]
+        if (image2_color > [255, 255, 255]).any():
+            image2_color = [255, 255, 255]
         poses = np.array([(pos[0] - self.center[0]), (pos[1] - self.center[1])])
         pos1 = poses * angle_1 / b + self.center
         pos2 = poses * (-1 * angle_2 / b) + self.center
-        self.screen.fill([0, 0, 0])
-        self.lens_update()
         pygame.draw.circle(self.screen, source_color, pos, 5)
         pygame.draw.circle(self.screen, image1_color_, self.center, angle_1, 1)
         pygame.draw.circle(self.screen, image2_color_, self.center, angle_2, 1)

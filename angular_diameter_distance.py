@@ -23,3 +23,8 @@ def einstein_radius(M=10**12, z1=0.5, z2=1.0, H0=70, omega_m=0.3, omega_a=0.7):
 def critical_density(M=10**12, z1=0.5, z2=1.0, H0=70, omega_m=0.3, omega_a=0.7):
     return M / np.pi / einstein_radius(M, z1, z2, H0, omega_m, omega_a)**2 / angular_diameter_distance(z1, H0, omega_m, omega_a)**2
 
+
+def magnification(b, einstein_radius):
+    u = b / einstein_radius
+    return (u ** 2 + 2) / (2 * u * np.sqrt(u ** 2 + 4)) + 0.5, (u ** 2 + 2) / (2 * u * np.sqrt(u ** 2 + 4)) - 0.5
+

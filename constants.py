@@ -12,16 +12,9 @@ WIDTH = 1200
 HEIGHT = 700
 
 
-lens_color = [100, 100, 100]
+lens_color = np.array([100.0, 100.0, 100.0])
 lens_color_ = lens_color.copy()
-lens_color_.append(50)
-source_color = [250, 250, 200]
+lens_color_ *= 0.5
+source_color = np.array([100.0, 100.0, 75.0])
 source_color_ = source_color.copy()
-source_color_.append(50)
-# image1_color = [150, 150, 250]
-# image1_color_ = image1_color
-# image1_color_.append(50)
-# image2_color = [250, 100, 150]
-# image2_color_ = image2_color
-# image2_color_.append(50)
-
+source_color_ *= 0.5
