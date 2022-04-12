@@ -1,4 +1,3 @@
-import numpy as np
 import pygame
 from constants import *
 from angular_diameter_distance import einstein_radius, magnification
@@ -16,6 +15,8 @@ class LensModel:
         einstein_radius_ = einstein_radius(m, z1, z2, h0, omega_m, omega_a)
         self.einstein_radius = HEIGHT / 4
         self.center = np.array([WIDTH/2, HEIGHT/2])
+        self.dx = dx
+        self.dy = dy
         self.diff = np.array([dx, dy])
         self.pos = self.center
 
@@ -29,6 +30,7 @@ class LensModel:
         angle_1 = (b + np.sqrt(b ** 2 + 4 * self.einstein_radius ** 2)) / 2
         angle_2 = abs((b - np.sqrt(b ** 2 + 4 * self.einstein_radius ** 2)) / 2)
         m1, m2 = magnification(b, self.einstein_radius)
+
         image1_color = source_color.copy()
         image1_color *= m1
         image1_color_ = source_color.copy()
@@ -43,6 +45,7 @@ class LensModel:
                 image1_color[i] = 255
             if image2_color[i] > 255:
                 image2_color[i] = 255
+
         poses = np.array([(self.pos[0] - self.center[0]), (self.pos[1] - self.center[1])])
         pos1 = poses * angle_1 / b + self.center
         pos2 = poses * (-1 * angle_2 / b) + self.center
@@ -61,7 +64,7 @@ sources = []
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 for i in range(30):
     for j in range(30):
-        sources.append(LensModel(screen=screen, dx=5*(np.sin(j) + np.cos(i)), dy=5*(np.sin(i) + np.cos(j))))
+        sources.append(LensModel(screen=screen, dx=400*(np.sin(j) + np.cos(i)), dy=10*(np.sin(i) + np.cos(j))))
 
 pygame.init()
 
@@ -71,6 +74,7 @@ finished = False
 
 while not finished:
     clock.tick(FPS)
+    time = clock.get_time()
     diff = np.array([0, 0])
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -82,8 +86,9 @@ while not finished:
         screen.fill([0, 0, 0])
         sources[0].lens_update()
         for source in sources:
-            source.update(pygame.mouse.get_pos() + source.diff)
-    if any(key):
+            source.pos = np.array(pygame.mouse.get_pos()) + source.diff
+            source.update(source.pos)
+    if key[pygame.K_DOWN] or key[pygame.K_UP] or key[pygame.K_RIGHT] or key[pygame.K_LEFT]:
         if key[pygame.K_DOWN]:
             diff += np.array([0, 1])
         if key[pygame.K_UP]:
@@ -95,7 +100,22 @@ while not finished:
         screen.fill([0, 0, 0])
         sources[0].lens_update()
         for source in sources:
-            source.update(source.pos + diff)
+            source.pos += diff
+            source.update(source.pos)
+    if key[pygame.K_EQUALS]:
+        screen.fill([0, 0, 0])
+        sources[0].lens_update()
+        for source in sources:
+            source.diff += np.array([source.dx, source.dy])
+            source.pos += source.diff
+            source.update(source.pos)
+    if key[pygame.K_MINUS]:
+        screen.fill([0, 0, 0])
+        sources[0].lens_update()
+        for source in sources:
+            source.diff -= np.array([source.dx, source.dy])
+            source.pos += source.diff
+            source.update(source.pos)
 
     pygame.display.update()
 
