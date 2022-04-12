@@ -1,6 +1,9 @@
 import pygame
 from constants import *
 from angular_diameter_distance import einstein_radius, magnification
+import pygame_widgets
+from pygame_widgets.slider import Slider
+from pygame_widgets.textbox import TextBox
 
 
 def draw_grid(scale, b, er, fps, block_size=50, m=10**12, z1=0.5, z2=1.0, h0=H0, omega_m=0.3, omega_a=0.7, color=(150, 150, 150)):
@@ -124,6 +127,12 @@ for i in range(n):
 
 pygame.init()
 
+slider = Slider(screen, WIDTH-175, 325, 100, 20, min=0, max=100, step=1, colour=(10, 20, 30), handleColour=(180, 170, 240))
+text = TextBox(screen, WIDTH-215, 315, 100, 0, fontSize=20, colour=(0, 0, 0), textColour=(150, 150, 150))
+text.setText('Lens mass in 10E+x Sun masses')
+output = TextBox(screen, WIDTH-140, 380, 30, 0, fontSize=20, colour=(0, 0, 0), textColour=(150, 150, 150))
+pos = (0, 0)
+output.disable()
 pygame.display.update()
 clock = pygame.time.Clock()
 finished = False
@@ -132,16 +141,19 @@ while not finished:
     clock.tick(FPS)
     time = clock.get_time()
     diff = np.array([0, 0])
-    for event in pygame.event.get():
+    events = pygame.event.get()
+    for event in events:
         if event.type == pygame.QUIT:
             finished = True
     pressed = pygame.mouse.get_pressed()
     key = pygame.key.get_pressed()
     if pressed[0]:
         screen.fill(bck_color)
+        if not pygame.Rect(WIDTH-220, 325, 200, 20).collidepoint(pygame.mouse.get_pos()):
+            pos = pygame.mouse.get_pos()
         sources[0].lens_update()
         for source in sources:
-            source.pos = np.array(pygame.mouse.get_pos()) + source.diff
+            source.pos = np.array(pos) + source.diff
             source.update(source.pos)
     if key[pygame.K_DOWN] or key[pygame.K_UP] or key[pygame.K_RIGHT] or key[pygame.K_LEFT]:
         if key[pygame.K_DOWN]:
@@ -171,7 +183,9 @@ while not finished:
             source.diff -= np.array([source.dx, source.dy])
             source.pos += source.diff
             source.update(source.pos)
-
+    pygame_widgets.update(events)
+    output.setText('%G' % slider.getValue())
+    m = 10 ** slider.getValue()
     draw_grid(s.scale, s.beta, s.einstein_radius, int(clock.get_fps()), 50, s.m, s.z1, s.z2, s.h0, s.omega_m, s.omega_a)
 
     pygame.display.update()
