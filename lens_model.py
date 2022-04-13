@@ -1,6 +1,6 @@
 import pygame
 from constants import *
-from angular_diameter_distance import einstein_radius, magnification
+from angular_diameter_distance import einstein_angle, magnification
 
 
 class LensModel:
@@ -12,8 +12,8 @@ class LensModel:
         self.h0 = h0
         self.omega_m = omega_m
         self.omega_a = omega_a
-        einstein_radius_ = einstein_radius(m, z1, z2, h0, omega_m, omega_a)
-        self.einstein_radius = HEIGHT / 4
+        einstein_angle_ = einstein_angle(m, z1, z2, h0, omega_m, omega_a)
+        self.einstein_angle = HEIGHT / 4
         self.center = np.array([WIDTH/2, HEIGHT/2])
         self.dx = dx
         self.dy = dy
@@ -23,13 +23,13 @@ class LensModel:
     def update(self, pos):
         self.pos = np.array(pos)
         if (pos == self.center).all():
-            pygame.draw.circle(self.screen, [255, 255, 255], self.center, self.einstein_radius, 2)
+            pygame.draw.circle(self.screen, [255, 255, 255], self.center, self.einstein_angle, 2)
             return
 
         b = np.sqrt((self.pos[0] - self.center[0])**2 + (self.pos[1] - self.center[1])**2)
-        angle_1 = (b + np.sqrt(b ** 2 + 4 * self.einstein_radius ** 2)) / 2
-        angle_2 = abs((b - np.sqrt(b ** 2 + 4 * self.einstein_radius ** 2)) / 2)
-        m1, m2 = magnification(b, self.einstein_radius)
+        angle_1 = (b + np.sqrt(b ** 2 + 4 * self.einstein_angle ** 2)) / 2
+        angle_2 = abs((b - np.sqrt(b ** 2 + 4 * self.einstein_angle ** 2)) / 2)
+        m1, m2 = magnification(b, self.einstein_angle)
 
         image1_color = source_color.copy()
         image1_color *= m1
@@ -57,7 +57,7 @@ class LensModel:
 
     def lens_update(self):
         pygame.draw.circle(self.screen, lens_color, self.center, 5)
-        pygame.draw.circle(self.screen, lens_color_, self.center, self.einstein_radius, 1)
+        pygame.draw.circle(self.screen, lens_color_, self.center, self.einstein_angle, 1)
 
 
 sources = []

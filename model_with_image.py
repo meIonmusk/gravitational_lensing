@@ -1,6 +1,6 @@
 import pygame
 from constants import *
-from angular_diameter_distance import einstein_radius, magnification
+from angular_diameter_distance import einstein_angle, magnification
 import pygame_widgets
 from pygame_widgets.slider import Slider
 from pygame_widgets.textbox import TextBox
@@ -37,9 +37,9 @@ class LensModel:
         self.h0 = h0
         self.omega_m = omega_m
         self.omega_a = omega_a
-        einstein_radius_ = einstein_radius(m, z1, z2, h0, omega_m, omega_a)
-        self.einstein_radius = HEIGHT / 4
-        self.scale = einstein_radius_ / self.einstein_radius
+        einstein_angle_ = einstein_angle(m, z1, z2, h0, omega_m, omega_a)
+        self.einstein_angle = HEIGHT / 4
+        self.scale = einstein_angle_ / self.einstein_angle
         self.center = np.array([WIDTH/2, HEIGHT/2])
         self.dx = dx
         self.dy = dy
@@ -53,13 +53,13 @@ class LensModel:
 
         self.pos = np.array(pos)
         if (pos == self.center).all():
-            # pygame.draw.circle(self.screen, [255, 255, 255], self.center, self.einstein_radius, 2)
+            # pygame.draw.circle(self.screen, [255, 255, 255], self.center, self.einstein_angle, 2)
             return
 
         self.beta = np.sqrt((self.pos[0] - self.center[0])**2 + (self.pos[1] - self.center[1])**2)
-        angle_1 = (self.beta + np.sqrt(self.beta ** 2 + 4 * self.einstein_radius ** 2)) / 2
-        angle_2 = abs((self.beta - np.sqrt(self.beta ** 2 + 4 * self.einstein_radius ** 2)) / 2)
-        m1, m2 = magnification(self.beta, self.einstein_radius)
+        angle_1 = (self.beta + np.sqrt(self.beta ** 2 + 4 * self.einstein_angle ** 2)) / 2
+        angle_2 = abs((self.beta - np.sqrt(self.beta ** 2 + 4 * self.einstein_angle ** 2)) / 2)
+        m1, m2 = magnification(self.beta, self.einstein_angle)
 
         poses = np.array([(self.pos[0] - self.center[0]), (self.pos[1] - self.center[1])])
         pos1 = poses * angle_1 / self.beta + self.center
@@ -100,7 +100,7 @@ class LensModel:
 
     def lens_update(self):
         pygame.draw.circle(self.screen, lens_color, self.center, 5)
-        pygame.draw.circle(self.screen, lens_color_, self.center, self.einstein_radius, 1)
+        pygame.draw.circle(self.screen, lens_color_, self.center, self.einstein_angle, 1)
 
 
 sources = []
@@ -185,8 +185,9 @@ while not finished:
             source.update(source.pos)
     pygame_widgets.update(events)
     output.setText('%G' % slider.getValue())
-    m = 10 ** slider.getValue()
-    draw_grid(s.scale, s.beta, s.einstein_radius, int(clock.get_fps()), 50, s.m, s.z1, s.z2, s.h0, s.omega_m, s.omega_a)
+    s.m = 10 ** slider.getValue()
+    s.scale = einstein_angle(s.m, s.z1, s.z2, s.h0, s.omega_m, s.omega_a) / s.einstein_angle
+    draw_grid(s.scale, s.beta, s.einstein_angle, int(clock.get_fps()), 50, s.m, s.z1, s.z2, s.h0, s.omega_m, s.omega_a)
 
     pygame.display.update()
 

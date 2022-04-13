@@ -13,7 +13,7 @@ def angular_diameter_distance_btw(z1=0.0, z2=1.0, H0=70, omega_m=0.5, omega_a=0.
     return angular_diameter_distance(z2, H0, omega_m, omega_a) - (1 + z1) / (1 + z2) * angular_diameter_distance(z1, H0, omega_m, omega_a)
 
 
-def einstein_radius(M=10**12, z1=0.5, z2=1.0, H0=70, omega_m=0.3, omega_a=0.7):
+def einstein_angle(M=10**12, z1=0.5, z2=1.0, H0=70, omega_m=0.3, omega_a=0.7):
     D_ls = angular_diameter_distance_btw(z1, z2, H0, omega_m, omega_a)
     D_l = angular_diameter_distance(z1, H0, omega_m, omega_a)
     D_s = angular_diameter_distance(z2, H0, omega_m, omega_a)
@@ -21,7 +21,7 @@ def einstein_radius(M=10**12, z1=0.5, z2=1.0, H0=70, omega_m=0.3, omega_a=0.7):
 
 
 def critical_density(M=10**12, z1=0.5, z2=1.0, H0=70, omega_m=0.3, omega_a=0.7):
-    return M / np.pi / einstein_radius(M, z1, z2, H0, omega_m, omega_a)**2 / angular_diameter_distance(z1, H0, omega_m, omega_a)**2
+    return M / np.pi / einstein_angle(M, z1, z2, H0, omega_m, omega_a)**2 / angular_diameter_distance(z1, H0, omega_m, omega_a)**2
 
 
 def magnification(b, einstein_radius):
