@@ -13,12 +13,12 @@ def draw_grid(scale, b, er, fps, block_size=50, m=10**12, z1=0.5, z2=1.0, h0=H0,
             pygame.draw.line(screen, (20, 20, 20), (x, 0), (x, HEIGHT))
         pygame.draw.line(screen, (20, 20, 20), (0, y), (WIDTH, y))
         if y // block_size % 2 == 0:
-            text1 = f1.render('%G.' % (y * scale), True, color)
+            text1 = f1.render('%G.' % ((y - HEIGHT/2) * scale), True, color)
             screen.blit(text1, (20, y))
     text2 = f1.render(f'm = %G Mc' %m, True, color)
     text3 = f1.render(f'z1 = {z1}, z2 = {z2}, H0 = {h0}', True, color)
-    text4 = f1.render(f'omega_m = {omega_m}, omega_a = {omega_a}', True, color)
-    text5 = f1.render(f'e angle = {er}, beta = {round(b, 2)}', True, color)
+    text4 = f1.render(f'omega_m = %G., omega_a = {omega_a}' % omega_m, True, color)
+    text5 = f1.render(f'e angle = {round(er, 2)}, beta = {round(b, 2)}', True, color)
     text6 = f1.render(f'FPS: {fps}', True, color)
 
     screen.blit(text2, (WIDTH - 200, block_size))
@@ -53,7 +53,7 @@ class LensModel:
 
         self.pos = np.array(pos)
         if (pos == self.center).all():
-            # pygame.draw.circle(self.screen, [255, 255, 255], self.center, self.einstein_angle, 2)
+            # pygame.draw.circle(self.screen, [255, 255, 255], self.center, self.einstein_angle, 5)
             return
 
         self.beta = np.sqrt((self.pos[0] - self.center[0])**2 + (self.pos[1] - self.center[1])**2)
@@ -65,21 +65,20 @@ class LensModel:
         pos1 = poses * angle_1 / self.beta + self.center
         pos2 = poses * (-1 * angle_2 / self.beta) + self.center
 
-
         if m1 > 1:
             flag1 = pygame.BLEND_RGB_ADD
-            m1 = m1 ** 3
+            m1 = m1 ** 2.5
             if m1 > 255:
-                m1 = 230
+                m1 = 250
         else:
             flag1 = pygame.BLEND_RGBA_MULT
             m1 = 255 * m1
 
         if m2 > 1:
             flag2 = pygame.BLEND_RGB_ADD
-            m2 = m2 ** 3
+            m2 = m2 ** 2.5
             if m2 > 255:
-                m2 = 230
+                m2 = 250
         else:
             flag2 = pygame.BLEND_RGBA_MULT
             m2 = 255 * m2
@@ -94,7 +93,7 @@ class LensModel:
 
         image = self.image.convert_alpha()
         image.fill((100, 100, 100), special_flags=pygame.BLEND_RGBA_MULT)
-        screen.blit(image, self.pos)
+        # screen.blit(image, self.pos)
         screen.blit(im1, pos1)
         screen.blit(im2, pos2)
 
@@ -108,10 +107,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # bck_color = [100, 255, 120]
 bck_color = [0, 0, 0]
-n = 50
-size = np.array((200, 80))
+n = 80
 # image = pygame.image.load("Galaxy-Transparent-Image.png").convert_alpha()
 image = pygame.image.load("Milky-Way-Transparent-Images.png").convert_alpha()
+scale = image.get_size()[0] / 200
+size = np.array(image.get_size()) / scale
 resized_image = pygame.transform.scale(image, size)
 for i in range(n):
     for j in range(n):
@@ -127,7 +127,7 @@ for i in range(n):
 
 pygame.init()
 
-slider = Slider(screen, WIDTH-175, 325, 100, 20, min=0, max=100, step=1, colour=(10, 20, 30), handleColour=(180, 170, 240))
+slider = Slider(screen, WIDTH-175, 325, 100, 20, min=10, max=14, step=0.01, colour=(10, 20, 30), handleColour=(180, 170, 240), initial=12)
 text = TextBox(screen, WIDTH-215, 315, 100, 0, fontSize=20, colour=(0, 0, 0), textColour=(150, 150, 150))
 text.setText('Lens mass in 10E+x Sun masses')
 output = TextBox(screen, WIDTH-140, 380, 30, 0, fontSize=20, colour=(0, 0, 0), textColour=(150, 150, 150))
@@ -151,10 +151,17 @@ while not finished:
         screen.fill(bck_color)
         if not pygame.Rect(WIDTH-220, 325, 200, 20).collidepoint(pygame.mouse.get_pos()):
             pos = pygame.mouse.get_pos()
-        sources[0].lens_update()
+        else:
+            m = 10 ** slider.getValue()
+            if m / s.m < 1000:
+                for source in sources:
+                    source.einstein_angle = HEIGHT / 4 * np.sqrt(m / source.m)
+            output.setText('%G' % m)
         for source in sources:
             source.pos = np.array(pos) + source.diff
             source.update(source.pos)
+        s.lens_update()
+
     if key[pygame.K_DOWN] or key[pygame.K_UP] or key[pygame.K_RIGHT] or key[pygame.K_LEFT]:
         if key[pygame.K_DOWN]:
             diff += np.array([0, 2])
@@ -165,29 +172,29 @@ while not finished:
         if key[pygame.K_LEFT]:
             diff += np.array([-2, 0])
         screen.fill(bck_color)
-        sources[0].lens_update()
+        s.lens_update()
         for source in sources:
             source.pos += diff
             source.update(source.pos)
     if key[pygame.K_EQUALS]:
         screen.fill(bck_color)
-        sources[0].lens_update()
+        s.lens_update()
         for source in sources:
             source.diff += np.array([source.dx, source.dy])
             source.pos += source.diff
             source.update(source.pos)
     if key[pygame.K_MINUS]:
         screen.fill(bck_color)
-        sources[0].lens_update()
+        s.lens_update()
         for source in sources:
             source.diff -= np.array([source.dx, source.dy])
             source.pos += source.diff
             source.update(source.pos)
     pygame_widgets.update(events)
-    output.setText('%G' % slider.getValue())
-    s.m = 10 ** slider.getValue()
-    s.scale = einstein_angle(s.m, s.z1, s.z2, s.h0, s.omega_m, s.omega_a) / s.einstein_angle
-    draw_grid(s.scale, s.beta, s.einstein_angle, int(clock.get_fps()), 50, s.m, s.z1, s.z2, s.h0, s.omega_m, s.omega_a)
+
+    # s.scale = einstein_angle(s.m, s.z1, s.z2, s.h0, s.omega_m, s.omega_a) / s.einstein_angle
+    m = 10 ** slider.getValue()
+    draw_grid(s.scale, s.beta, s.einstein_angle, int(clock.get_fps()), 50, m, s.z1, s.z2, s.h0, s.omega_m, s.omega_a)
 
     pygame.display.update()
 
