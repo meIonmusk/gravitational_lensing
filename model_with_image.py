@@ -67,18 +67,18 @@ class LensModel:
 
         if m1 > 1:
             flag1 = pygame.BLEND_RGB_ADD
-            m1 = m1 ** 2.5
+            m1 = m1 ** 2.3
             if m1 > 255:
-                m1 = 250
+                m1 = 150
         else:
             flag1 = pygame.BLEND_RGBA_MULT
             m1 = 255 * m1
 
         if m2 > 1:
             flag2 = pygame.BLEND_RGB_ADD
-            m2 = m2 ** 2.5
+            m2 = m2 ** 2.3
             if m2 > 255:
-                m2 = 250
+                m2 = 150
         else:
             flag2 = pygame.BLEND_RGBA_MULT
             m2 = 255 * m2
@@ -115,7 +115,7 @@ size = np.array(image.get_size()) / scale
 resized_image = pygame.transform.scale(image, size)
 for i in range(n):
     for j in range(n):
-        cropped = pygame.Surface(size/n*3, pygame.SRCALPHA, 32).convert_alpha()
+        cropped = pygame.Surface(size/n*7, pygame.SRCALPHA, 32).convert_alpha()
 
         dx = size[0] * (j - n/2) / n
         dy = size[1] * (i - n/2) / n
