@@ -1,3 +1,7 @@
+import time
+
+import numpy as np
+from matplotlib.widgets import Slider
 from matplotlib.backend_bases import MouseButton
 import matplotlib.pyplot as plt
 from angular_diameter_distance import *
@@ -69,8 +73,9 @@ class Source:
 def on_move(event):
     global source
     if event.inaxes:
+        time1 = time.time()
         if event.button is MouseButton.LEFT:
-            ax = event.inaxes
+            # ax = ax
             mouse_pos = (np.array([event.xdata, event.ydata]))
 
             poses = [source_.images_pos(mouse_pos + source_.dis) for source_ in sources]
@@ -100,14 +105,29 @@ def on_move(event):
             ax.set_xlim(-1 * lim, lim)
             ax.set_ylim(-1 * lim, lim)
 
+            fps = 1 / (time.time() - time1)
             plt.text(e_an, 4 * e_an, f'M = %G sun masses\n'
                                      f'$z_1$ = {lens.z}, $z_2$ = {source.z}\n'
                                      f'$\Omega_m = {lens.omega_m}$, $\Omega_\Lambda = {lens.omega_a}$, $H_0 = {lens.h0}$\n'
                                      fr'$\theta_E =$%e, $\beta =$%e'
+                                     f'\nFPS = {round(fps)}'
+
                      % (source.lens.m, source.einstein_angle, sources[len(sources)//2].beta),
                      alpha=0.8, color=[0.8, 0.8, 0.9], fontsize=7)
 
             plt.draw()
+
+
+def update_mass(m):
+    global e_an, lim, source
+    lens.m = 10 ** m
+    e_an = einstein_angle(lens.m, lens.z, 1.0, lens.h0, lens.omega_m, lens.omega_a)
+    lim = e_an * 4
+    m_slider.valtext.set_text('%.2G' % lens.m)
+    for i in range(len(sources)):
+        sources[i].einstein_angle = e_an
+
+    plt.draw()
 
 
 def line_source(n=2000):
@@ -129,14 +149,14 @@ def filled_source(n=70):
                                   dy=(np.sin(i * 2 * np.pi/n) + np.cos(j * 2 * np.pi/n))*e_an / 4, var=True))
 
 
-fig, ax = plt.subplots()
-
+fig, ax = plt.subplots(label='Gravitational lensing', figsize=(6, 6))
+plt.subplots_adjust(left=0.15, bottom=0.1)
 sources = []
-lens = Lens(ax, m=10**30)
+lens = Lens(ax, m=10**12)
 
 e_an = einstein_angle(lens.m, lens.z, 1.0, lens.h0, lens.omega_m, lens.omega_a)
 
-filled_source()
+line_source()
 source = sources[0]
 
 lim = e_an * 4
@@ -147,18 +167,36 @@ fig.set_facecolor([0, 0, 0])
 ax.set_facecolor([0, 0, 0])
 axes_color = np.array([0.18, 0.18, 0.2])
 
+axamp = plt.axes([0.95, 0.2, 0.0225, 0.63])
+m_slider = Slider(
+    ax=axamp,
+    label="lens\nmass",
+    valmin=10,
+    valmax=30,
+    valinit=np.log(lens.m)/np.log(10),
+    orientation="vertical",
+    track_color=(0.1, 0.07, 0.2),
+    facecolor=(0.8, 0.7, 0.9)
+)
+m_slider.label.set_color((0.8, 0.7, 0.9))
+m_slider.valtext.set_color((0.8, 0.7, 0.9))
+m_slider.valtext.set_text('%.2G' % lens.m)
+m_slider.label.set_size(fontsize)
+m_slider.valtext.set_size(fontsize)
+plt.axes(ax)
+
 ax.grid(color=axes_color/2, linestyle='--')
 ax.tick_params(axis='x', colors=axes_color)
 ax.tick_params(axis='y', colors=axes_color)
 ax.spines['bottom'].set_color(axes_color)
 ax.spines['left'].set_color(axes_color)
-plt.text(e_an, 4*e_an, f'M = %G sun masses\n'
+plt.text(e_an, 4.2*e_an, f'M = %G sun masses\n'
                        f'$z_1$ = {lens.z}, $z_2$ = {source.z}\n'
                        f'$\Omega_m = {lens.omega_m}$, $\Omega_\Lambda = {lens.omega_a}$, $H_0 = {lens.h0}$\n'
                        fr'$\theta_E =$%e, $\beta =$%e' %
          (source.lens.m, source.einstein_angle, sources[len(sources)//2].beta),
-         alpha=0.8, color=[0.8, 0.8, 0.9], fontsize=7)
-
+         alpha=0.8, color=[0.8, 0.8, 0.9], fontsize=fontsize)
+m_slider.on_changed(update_mass)
 binding_id = plt.connect('motion_notify_event', on_move)
 
 plt.show()
