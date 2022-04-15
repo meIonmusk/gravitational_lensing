@@ -13,7 +13,7 @@ def draw_grid(scale, b, er, fps, block_size=50, m=10**12, z1=0.5, z2=1.0, h0=H0,
             pygame.draw.line(screen, (20, 20, 20), (x, 0), (x, HEIGHT))
         pygame.draw.line(screen, (20, 20, 20), (0, y), (WIDTH, y))
         if y // block_size % 2 == 0:
-            text1 = f1.render('%G.' % ((y - HEIGHT/2) * scale), True, color)
+            text1 = f1.render('%G.' % (y * scale), True, color)
             screen.blit(text1, (20, y))
     text2 = f1.render(f'm = %G Mc' %m, True, color)
     text3 = f1.render(f'z1 = {z1}, z2 = {z2}, H0 = {h0}', True, color)
