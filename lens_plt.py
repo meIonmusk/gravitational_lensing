@@ -27,7 +27,7 @@ class Lens:
 
 
 class Source:
-    def __init__(self, ax, lens, image=None, color=np.array([1.0, 0.6, 0.7]), z=1.0, dx=0, dy=0):
+    def __init__(self, ax, lens, image=None, color=np.array([1.0, 0.6, 0.7]), z=1.0, dx=0, dy=0, var=True):
         self.ax = ax
         self.lens = lens
         self.z = z
@@ -39,6 +39,7 @@ class Source:
         # self.image = image
         self.color = color
         self.beta = 0
+        self.var_color = var
 
     def images_pos(self, pos):
         self.pos = np.array(pos)
@@ -53,7 +54,8 @@ class Source:
 
     def images_colors(self):
         m = np.array(magnification(self.beta, self.einstein_angle))
-        m = 0.3 ** (1 / m)
+        if all(m != 0):
+            m = 0.3 ** (1 / m)
 
         color = self.color * m[0] * m[1]
         if any(m > 0.99):
@@ -71,27 +73,17 @@ def on_move(event):
             ax = event.inaxes
             mouse_pos = (np.array([event.xdata, event.ydata]))
 
-            # pos1x = pos1y = pos2x = pos2y = colors1 = colors2 = []
-            # for source_ in sources:
-            #     poses = source_.images_pos(mouse_pos + source_.dis)
-                # colors = source_.images_colors()
-                # pos1x.append(poses[0][0])
-                # pos1y.append(poses[0][1])
-                # pos2x.append(poses[1][0])
-                # pos2y.append(poses[0][1])
-                # colors1.append([colors[0]])
-                # colors2.append([colors[1]])
-            # colors1 = np.array(colors1)
-            # colors2 = np.array(colors2)
             poses = [source_.images_pos(mouse_pos + source_.dis) for source_ in sources]
             pos1x = [pos[0][0] for pos in poses]
             pos1y = [pos[0][1] for pos in poses]
             pos2x = np.array([pos[1][0] for pos in poses])
             pos2y = np.array([pos[1][1] for pos in poses])
 
-            colors = [source.images_colors() for source in sources]
-            colors1 = np.array([color[0] for color in colors])
-            colors2 = np.array([color[1] for color in colors])
+            colors1 = colors2 = source.color
+            if source.var_color:
+                colors = [source.images_colors() for source in sources]
+                colors1 = np.array([color[0] for color in colors])
+                colors2 = np.array([color[1] for color in colors])
 
             ax.clear()
             ax.grid()
@@ -118,18 +110,34 @@ def on_move(event):
             plt.draw()
 
 
+def line_source(n=2000):
+    for i in range(n):
+        sources.append(Source(ax, lens=lens, dx=np.sin(i * 2 * np.pi / n) * e_an,
+                              dy=2 * np.sin(i * 2 * np.pi / n) * e_an, var=False))
+
+
+def empty_source(n=1000):
+    for i in range(n):
+        sources.append(Source(ax, lens=lens, dx=np.sin(i * 2 * np.pi/n) * e_an / 4,
+                              dy=np.cos(i * 2 * np.pi/n) * e_an / 4, var=False))
+
+
+def filled_source(n=70):
+    for i in range(n):
+        for j in range(n):
+            sources.append(Source(ax, lens=lens, dx=(np.sin(j * 2 * np.pi/n) + np.cos(i * 2 * np.pi/n))*e_an / 4,
+                                  dy=(np.sin(i * 2 * np.pi/n) + np.cos(j * 2 * np.pi/n))*e_an / 4, var=True))
+
+
 fig, ax = plt.subplots()
 
 sources = []
-lens = Lens(ax, m=10**12)
-n = 50
-k = 1 / n / 8000
-for i in range(n):
-    for j in range(n):
-        sources.append(Source(ax, lens=lens, dx=(np.sin(i) + np.cos(j))*k, dy=(np.sin(i) + np.cos(j))*k))
-source = Source(ax, lens=lens)
+lens = Lens(ax, m=10**30)
 
-e_an = einstein_angle(lens.m, lens.z, source.z, lens.h0, lens.omega_m, lens.omega_a)
+e_an = einstein_angle(lens.m, lens.z, 1.0, lens.h0, lens.omega_m, lens.omega_a)
+
+filled_source()
+source = sources[0]
 
 lim = e_an * 4
 ax.set_xlim(-1 * lim, lim)
