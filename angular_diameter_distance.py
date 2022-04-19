@@ -1,5 +1,14 @@
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy.integrate import quad
 from constants import *
+from matplotlib import rc
+
+rc('font', **{'family': 'Times new roman'})
+rc('text', usetex=True)
+# rc('text.latex',unicode=True)
+rc('text.latex', preamble=r'\usepackage[utf8]{inputenc}')
+rc('text.latex', preamble=r'\usepackage[russian]{babel}')
 
 
 def angular_diameter_distance(z0=3.0, H0=70, omega_m=0.5, omega_a=0.5):
@@ -28,3 +37,41 @@ def magnification(b, einstein_radius):
     u = b / einstein_radius
     return (u ** 2 + 2) / (2 * u * np.sqrt(u ** 2 + 4)) + 0.5, (u ** 2 + 2) / (2 * u * np.sqrt(u ** 2 + 4)) - 0.5
 
+
+def show_graph(ax, H0=70, omega_m=0.5, omega_a=0.5):
+    Z = np.arange(0, 10, 0.01)
+    D = []
+    max_redshift = 0
+    D_a = 0
+    for z in Z:
+        d_a = angular_diameter_distance(z, H0, omega_m, omega_a)
+        if (d_a > D_a):
+            max_redshift = z
+        D_a = d_a
+        D.append(D_a)
+    print(f'max redshift = {max_redshift}')
+
+    D = np.array(D) / 10**6
+    z_max = max(D) * H0 / c + 0.4
+    ax.plot(Z, D)
+
+    Z = np.arange(0, z_max, 0.01)
+    ax.plot(Z, c/H0 * Z / 10**6)
+
+    ax.set_xlabel(r'z (Redshift)')
+    ax.set_ylabel(r'Angular Diameter Distance ($D_a$), Mpc')
+    ax.set_title(fr'$\Omega_m = {omega_m}\ \Omega_\Lambda = {omega_a}$')
+
+    ax.grid(linestyle='--')
+
+
+def draw_graph():
+    fig = plt.figure()
+    # ax1 = fig.add_subplot(121)
+    ax2 = fig.add_subplot()
+    # show_graph(ax1, 70, 0, 1)
+    show_graph(ax2, 70, 0.3, 0.7)
+    plt.show()
+
+
+draw_graph()
