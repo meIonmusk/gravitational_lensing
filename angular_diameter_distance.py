@@ -53,10 +53,10 @@ def show_graph(ax, H0=70, omega_m=0.5, omega_a=0.5):
 
     D = np.array(D) / 10**6
     z_max = max(D) * H0 / c + 0.4
-    ax.plot(Z, D)
+    ax.plot(Z, D, linewidth=2, label='Angular diameter distance')
 
     Z = np.arange(0, z_max, 0.01)
-    ax.plot(Z, c/H0 * Z / 10**6)
+    ax.plot(Z, c/H0 * Z / 10**6, linewidth=2, label='Hubble\'s law')
 
     ax.set_xlabel(r'z (Redshift)')
     ax.set_ylabel(r'Angular Diameter Distance ($D_a$), Mpc')
@@ -71,6 +71,7 @@ def draw_graph():
     ax2 = fig.add_subplot()
     # show_graph(ax1, 70, 0, 1)
     show_graph(ax2, 70, 0.3, 0.7)
+    plt.legend()
     plt.show()
 
 
