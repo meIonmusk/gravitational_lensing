@@ -62,9 +62,9 @@ class LensModel:
 
 sources = []
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-for i in range(30):
-    for j in range(30):
-        sources.append(LensModel(screen=screen, dx=400*(np.sin(j) + np.cos(i)), dy=10*(np.sin(i) + np.cos(j))))
+for i in range(50):
+    for j in range(50):
+        sources.append(LensModel(screen=screen, dx=5* i, dy=5 *j))
 
 pygame.init()
 
